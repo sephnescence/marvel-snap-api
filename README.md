@@ -16,6 +16,16 @@ I moved to a new Mac after initialising this. Naturally that means my vendor fol
 
 And after all that I don't have a .env file lol. So I give up. I'm just going to regenerate the app. Turns out I had to anyways as I'm not on an M2 and packages changed. Like selenium to seleniarm
 
+I finally tracked this down in the docs though... Not sure if `--ignore-platform-reqs` would have meant that it would have installed intel mac stuff instead of silicon 🤷
+```
+docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" \
+    -w /var/www/html \
+    laravelsail/php82-composer:latest \
+    composer install --ignore-platform-reqs
+```
+
 <br />
 <hr />
 
