@@ -91,7 +91,7 @@ services:
         networks:
             - sail
     selenium:
-        image: selenium/standalone-chrome
+        image: seleniarm/standalone-chromium
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         volumes:
