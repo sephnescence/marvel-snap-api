@@ -16,7 +16,13 @@ I moved to a new Mac after initialising this. Naturally that means my vendor fol
 
 And after all that I don't have a .env file lol. So I give up. I'm just going to regenerate the app. Turns out I had to anyways as I'm not on an M2 and packages changed. Like selenium to seleniarm
 
-I finally tracked this down in the docs though... Not sure if `--ignore-platform-reqs` would have meant that it would have installed intel mac stuff instead of silicon 🤷
+I finally tracked this down in the docs though... Not sure if `--ignore-platform-reqs` would have meant that it would have installed intel mac stuff instead of silicon 
+🤷
+
+<hr />
+
+I want to install something that allows for tstzranges, but I get "Your requirements could not be resolved to an installable set of packages." when trying to run `./vendor/bin/sail composer require umbrellio/laravel-pg-extensions`. https://packagist.org/packages/umbrellio/laravel-pg-extensions doesn't list Laravel 10 at the time. So I guess I'll have to live without it for now
+
 ```
 docker run --rm \
     -u "$(id -u):$(id -g)" \
