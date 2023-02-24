@@ -22,7 +22,7 @@ services:
         networks:
             - sail
         depends_on:
-            # - mysql # BTTODO - I want to swap to postgres, but having trouble connecting my Laravel to it. Meanwhile mysql works but I can't connect to it from my host LOL
+            # - mysql
             - pgsql
             - redis
             - meilisearch
