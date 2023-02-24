@@ -75,7 +75,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'prefer', // require isn't supported in arm64v8/postgres:14-alpine. Not sure why
         ],
 
         'sqlsrv' => [
