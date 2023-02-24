@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SnapFanCards\SnapFanCards;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,3 +18,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Testing a json response
+Route::get('/snap_fan_cards', [SnapFanCards::class, 'page']);
