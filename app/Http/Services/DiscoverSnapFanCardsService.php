@@ -47,6 +47,23 @@ class DiscoverSnapFanCardsService {
              * - We can detect that cost or power, etc. has been updated too - BTTODO
              * 
              * Over time, season will also become defunct as their season pass cards move to series 5 - BTTODO
+             * 
+             * Once variants have been found, we need to queue the background images, foreground images, etc. in
+             *  the `internal_data->'downloads'` column - BTTODO
+             * 
+             * Need to make a scheduled task that will try to go and download these images - BTTODO
+             * 
+             * It's worth copying the html from the marvel-snap-helper repo and making blade versions as well,
+             *  just so they can easily be dumped here to see if they're working with variants, borders, etc. - BTTODO
+             * 
+             * Try and figure out how to add card border colours - BTTODO
+             * 
+             * Try and figure out how to add card effects. There are more than are listed on snap fan, including - BTTODO
+             *  - White tone flare (e.g. my black widow) (adds white dots in the background and a couple of white swirls)
+             *  - Green tone flare (e.g. my black widow) (adds green dots in the background and a couple of green swirls)
+             *  - Red tone flare
+             *  - Prism Finish
+             *  - Foil Finish (It looks like rainbow tin foil has been crumpled up and applied)
              */
             $cardName = $snapFanCard['key'];
             $series = $snapFanCard['sourceLabel'];
