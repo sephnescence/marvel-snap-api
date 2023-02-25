@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('name');
             $table->timestampTz('lifespan_start'); // Probably won't accurately represent when the card became obtainable, as cards are generally created as soon as leaks are discovered
             $table->timestampTz('lifespan_end'); // I doubt I'll see variants removed, but you never know
-            $table->jsonb('snapfan_data')->default('{}'); // Default to an empty object instead of null
+            // It turns out that jsonb will change the order of the keys on me. Apparently by key length. So instead of reimplementing a PHP-PGSQL-compatible array sort I can just use a json field instead
+            $table->json('snapfan_data')->default('{}'); // Default to an empty object instead of null
             $table->timestampsTz();
             $table->softDeletesTz();
         });

@@ -28,7 +28,9 @@ return new class extends Migration
             $table->string('name');
             $table->timestampTz('lifespan_start');
             $table->timestampTz('lifespan_end');
-            $table->jsonb('snapfan_data')->default('{}'); // Default to an empty object instead of null
+            // It turns out that jsonb will change the order of the keys on me. Apparently by key length. So instead of reimplementing a PHP-PGSQL-compatible array sort I can just use a json field instead
+            $table->json('snapfan_data')->default('{}'); // Default to an empty object instead of null
+            $table->jsonb('internal_data')->default('{}'); // Default to an empty object instead of null. Should be fine being a jsonb
             $table->timestampsTz();
             $table->softDeletesTz();
         });

@@ -227,5 +227,4 @@ class SnapFanService {
 
         return $curlHandle;
     }
-
 }

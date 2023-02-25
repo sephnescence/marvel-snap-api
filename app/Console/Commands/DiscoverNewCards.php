@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Http\Services\SnapFanService;
+use App\Http\Services\DiscoverSnapFanCardsService;
 use Illuminate\Console\Command;
 
 class DiscoverNewCards extends Command
@@ -13,14 +13,13 @@ class DiscoverNewCards extends Command
     protected $description = 'Discover new cards';
 
     public function __construct(
-        private SnapFanService $snapFanService
+        private DiscoverSnapFanCardsService $discoverSnapFanCardsService
     ) {
         parent::__construct();
     }
 
     public function handle(): void
     {
-        $cards = $this->snapFanService->discoverCards();
-        dd($cards);
+        $this->discoverSnapFanCardsService->discoverNewCards();
     }
 }
