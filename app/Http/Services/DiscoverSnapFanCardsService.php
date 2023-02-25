@@ -45,6 +45,8 @@ class DiscoverSnapFanCardsService {
              * 
              * - We must detect if new variants have been added - BTTODO
              * - We can detect that cost or power, etc. has been updated too - BTTODO
+             * 
+             * Over time, season will also become defunct as their season pass cards move to series 5 - BTTODO
              */
             $cardName = $snapFanCard['key'];
             $series = $snapFanCard['sourceLabel'];
