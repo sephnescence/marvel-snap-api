@@ -20,6 +20,7 @@ class DiscoverNewCards extends Command
 
     public function handle(): void
     {
-        $this->snapFanService->test();
+        $cards = $this->snapFanService->discoverCards();
+        dd($cards);
     }
 }
