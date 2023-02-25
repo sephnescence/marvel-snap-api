@@ -20,6 +20,7 @@ class DiscoverNewCards extends Command
 
     public function handle(): void
     {
+        // BTTODO - Really need to be adding tests to this
         $this->discoverSnapFanCardsService->discoverNewCards();
     }
 }

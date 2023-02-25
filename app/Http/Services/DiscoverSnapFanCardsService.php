@@ -3,9 +3,12 @@
 namespace App\Http\Services;
 
 use App\Models\MarvelSnapCard;
+use App\Models\MarvelSnapCardCardSeries;
 use App\Models\MarvelSnapCardSeries;
+use App\Models\MarvelSnapCardVariant;
 use Carbon\Carbon;
 use Illuminate\Log\Logger;
+use Ramsey\Uuid\Uuid;
 
 class DiscoverSnapFanCardsService {
     public function __construct(
@@ -36,17 +39,17 @@ class DiscoverSnapFanCardsService {
              * If the card doesn't exist at all, this is pretty simple
              *  - Find or create the marvel_snap_card_series row that the card belongs to - done
              *  - Create the marvel_snap_cards row - done
-             *  - Create the marvel_snap_card_card_series row - BTTODO
+             *  - Create the marvel_snap_card_card_series row - done
              * 
              * Over time, cards will change data, like series, cost, or power
-             * - We must detect if the series has changed. If so - BTTODO
-             *  - We need to end the lifespan of the current marvel_snap_card_card_series entry - BTTODO
-             *  - We need to make a new marvel_snap_card_card_series entry - BTTODO
+             * - We must detect if the series has changed. If so - done
+             *  - We need to end the lifespan of the current marvel_snap_card_card_series entry - done
+             *  - We need to make a new marvel_snap_card_card_series entry - done
              * 
-             * - We must detect if new variants have been added - BTTODO
-             * - We can detect that cost or power, etc. has been updated too - BTTODO
+             * - We must detect if new variants have been added
+             * - We can detect that cost or power, etc. has been updated too
              * 
-             * Over time, season will also become defunct as their season pass cards move to series 5 - BTTODO
+             * Over time, seasons will also become defunct as their season pass cards move to series 5 - BTTODO
              * 
              * Once variants have been found, we need to queue the background images, foreground images, etc. in
              *  the `internal_data->'downloads'` column - BTTODO
@@ -68,33 +71,17 @@ class DiscoverSnapFanCardsService {
             $cardName = $snapFanCard['key'];
             $series = $snapFanCard['sourceLabel'];
 
-            $marvelSnapCardSeries = $this->findOrCreateMarvelSnapCardSeries($series);
+            $snapFanCardSeries = $this->findOrCreateMarvelSnapCardSeries($series);
             $marvelSnapCard = $this->findOrCreateMarvelSnapCard($cardName, $snapFanCard);
+            $marvelSnapCardSeries = $marvelSnapCard->currentCardCardSeries;
 
-            $cardSnapFanData = $marvelSnapCard->snapfan_data;
-            $currentSnapFanData = $cardSnapFanData['current']['data'];
-            ksort($currentSnapFanData);
-
-            $this->log->info(json_encode($currentSnapFanData));
-            $this->log->info(json_encode($snapFanCard));
-
-            $cardDataHasChanged = strcmp(
-                json_encode($currentSnapFanData),
-                json_encode($snapFanCard)
+            $this->syncSeries(
+                $marvelSnapCard,
+                $snapFanCardSeries,
+                $marvelSnapCardSeries
             );
 
-            if ($cardDataHasChanged !== 0) {
-                $snapFanDataObject = [
-                    'date' => Carbon::now()->toString(),
-                    'data' => $snapFanCard,
-                ];
-
-                $cardSnapFanData['history'][] = $snapFanDataObject;
-                $cardSnapFanData['current'] = $snapFanDataObject;
-                $marvelSnapCard->snapfan_data = $cardSnapFanData;
-                $marvelSnapCard->save();
-                $marvelSnapCard->fresh();
-            }
+            $this->syncCardVariants($marvelSnapCard, $snapFanCard);
         }
         
         return true;
@@ -102,7 +89,8 @@ class DiscoverSnapFanCardsService {
 
     private function findOrCreateMarvelSnapCardSeries(string $series): MarvelSnapCardSeries
     {
-        return MarvelSnapCardSeries::firstOrCreate(
+        /** @var MarvelSnapCardSeries $snapSeriesModel */
+        $snapSeriesModel = MarvelSnapCardSeries::firstOrCreate(
             [
                 'name' => $series,
             ],
@@ -112,6 +100,12 @@ class DiscoverSnapFanCardsService {
                 'lifespan_end' => Carbon::maxValue(),
             ],
         );
+
+        /** @var MarvelSnapCardSeries $snapSeriesModel */
+        $snapSeriesModel = MarvelSnapCardSeries::where('name', '=', $series)
+            ->first(); // $snapSeriesModel->id will be null if just created otherwise
+
+        return $snapSeriesModel;
     }
 
     private function findOrCreateMarvelSnapCard(string $cardName, array $snapFanCard): MarvelSnapCard
@@ -121,7 +115,8 @@ class DiscoverSnapFanCardsService {
             'data' => $snapFanCard,
         ];
 
-        return MarvelSnapCard::firstOrCreate(
+        /** @var MarvelSnapCard $cardModel */
+        $cardModel = MarvelSnapCard::firstOrCreate(
             [
                 'name' => $cardName,
             ],
@@ -140,5 +135,130 @@ class DiscoverSnapFanCardsService {
                 ],
             ],
         );
+
+        /** @var MarvelSnapCard $cardModel */
+        $cardModel = MarvelSnapCard::where('name', '=', $cardName)
+            ->first(); // $cardModel->id will be null if just created otherwise
+
+        $cardSnapFanData = $cardModel->snapfan_data;
+        $currentSnapFanData = $cardSnapFanData['current']['data'];
+        ksort($currentSnapFanData);
+
+        $this->log->info('Card info');
+        $this->log->info(json_encode($currentSnapFanData));
+        $this->log->info(json_encode($snapFanCard));
+
+        $cardDataHasChanged = strcmp(
+            json_encode($currentSnapFanData),
+            json_encode($snapFanCard)
+        );
+
+        if ($cardDataHasChanged !== 0) {
+            $cardSnapFanData['history'][] = $snapFanDataObject;
+            $cardSnapFanData['current'] = $snapFanDataObject;
+            $cardModel->snapfan_data = $cardSnapFanData;
+            $cardModel->save();
+            $cardModel->fresh();
+        }
+
+        return $cardModel;
+    }
+
+    private function syncSeries(
+        MarvelSnapCard $marvelSnapCard,
+        MarvelSnapCardSeries $snapFanCardSeries,
+        ?MarvelSnapCardCardSeries $marvelSnapCardCardSeries
+    ): void {
+        $createNewCardCardSeriesRecord = $marvelSnapCardCardSeries === null;
+        if (
+            ($marvelSnapCardCardSeries instanceof MarvelSnapCardCardSeries)
+            && $marvelSnapCardCardSeries->marvel_snap_card_series_id !== $snapFanCardSeries->id
+        ) {
+            $marvelSnapCardCardSeries->lifespan_end = Carbon::now();
+            $marvelSnapCardCardSeries->save();
+
+            $createNewCardCardSeriesRecord = true;
+        }
+
+        if ($createNewCardCardSeriesRecord) {
+            $marvelSnapCardCardSeries = new MarvelSnapCardCardSeries;
+            $marvelSnapCardCardSeries->id = Uuid::uuid4()->toString();
+            $marvelSnapCardCardSeries->marvel_snap_card_series_id = $snapFanCardSeries->id;
+            $marvelSnapCardCardSeries->marvel_snap_card_id = $marvelSnapCard->id;
+            $marvelSnapCardCardSeries->lifespan_start = Carbon::now();
+            $marvelSnapCardCardSeries->lifespan_end = Carbon::maxValue();
+            $marvelSnapCardCardSeries->created_at = Carbon::now();
+            $marvelSnapCardCardSeries->updated_at = Carbon::now();
+            $marvelSnapCardCardSeries->save();
+        }
+    }
+
+    private function syncCardVariants(MarvelSnapCard $marvelSnapCard, array $snapFanCard): void
+    {
+        // Assuming that it's not possible to find existing variants for now
+        // Probably don't need to care actually. They will surely only be added and never change, but
+        //  maybe artist details will be updated though
+
+        // internal_data->downloads consists of...
+        // imageUrl
+        // imageComponents->backgroundUrls -- string[]
+        // imageComponents->foregroundUrls -- string[]
+        // imageComponents->foregroundUrl -- string
+        // imageComponents->logoUrl -- string
+
+        if (array_key_exists('variants', $snapFanCard) && is_array($snapFanCard['variants'])) {
+            foreach ($snapFanCard['variants'] as $variant) {
+                ksort($variant);
+                
+                $snapFanDataObject = [
+                    'date' => Carbon::now()->toString(),
+                    'data' => $variant,
+                ];
+
+                /** @var MarvelSnapCardVariant $variantModel */
+                $variantModel = MarvelSnapCardVariant::firstOrCreate(
+                    [
+                        'name' => $variant['key'],
+                        'marvel_snap_card_id' => $marvelSnapCard->id,
+                    ],
+                    [
+                        'name' => $variant['key'],
+                        'marvel_snap_card_id' => $marvelSnapCard->id,
+                        'lifespan_start' => Carbon::now(),
+                        'lifespan_end' => Carbon::maxValue(),
+                        'snapfan_data' => [
+                            'current' => $snapFanDataObject,
+                            'history' => $snapFanDataObject,
+                        ],
+                    ],
+                );
+
+                /** @var MarvelSnapCardVariant $variantModel */
+                $variantModel = MarvelSnapCardVariant::where('name', '=', $variant['key'])
+                    ->where('marvel_snap_card_id', '=', $marvelSnapCard->id)
+                    ->first(); // $variantModel->id will be null if just created otherwise
+
+                $variantSnapFanData = $variantModel->snapfan_data;
+                $currentSnapFanData = $variantSnapFanData['current']['data'];
+                ksort($currentSnapFanData);
+
+                $this->log->info('Variant info');
+                $this->log->info(json_encode($currentSnapFanData));
+                $this->log->info(json_encode($variant));
+
+                $variantDataHasChanged = strcmp(
+                    json_encode($currentSnapFanData),
+                    json_encode($variant)
+                );
+
+                if ($variantDataHasChanged !== 0) {
+                    $variantSnapFanData['history'][] = $snapFanDataObject;
+                    $variantSnapFanData['current'] = $snapFanDataObject;
+                    $marvelSnapCard->snapfan_data = $variantSnapFanData;
+                    $marvelSnapCard->save();
+                    $marvelSnapCard->fresh();
+                }
+            }
+        }
     }
 }
