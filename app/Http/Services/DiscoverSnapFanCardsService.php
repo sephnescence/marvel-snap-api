@@ -52,7 +52,7 @@ class DiscoverSnapFanCardsService {
              * Over time, seasons will also become defunct as their season pass cards move to series 5 - BTTODO
              * 
              * Once variants have been found, we need to queue the background images, foreground images, etc. in
-             *  the `internal_data->'downloads'` column - BTTODO
+             *  the `internal_data->'downloads'` column
              * 
              * Need to make a scheduled task that will try to go and download these images - BTTODO
              * 
@@ -130,9 +130,6 @@ class DiscoverSnapFanCardsService {
                         $snapFanDataObject,
                     ],
                 ],
-                'internal_data' => [
-                    'downloads' => [], // BTTODO - Construct an array of background images, etc. that I'll need to download eventually
-                ],
             ],
         );
 
@@ -199,13 +196,6 @@ class DiscoverSnapFanCardsService {
         // Probably don't need to care actually. They will surely only be added and never change, but
         //  maybe artist details will be updated though
 
-        // internal_data->downloads consists of...
-        // imageUrl
-        // imageComponents->backgroundUrls -- string[]
-        // imageComponents->foregroundUrls -- string[]
-        // imageComponents->foregroundUrl -- string
-        // imageComponents->logoUrl -- string
-
         if (array_key_exists('variants', $snapFanCard) && is_array($snapFanCard['variants'])) {
             foreach ($snapFanCard['variants'] as $variant) {
                 ksort($variant);
@@ -229,6 +219,15 @@ class DiscoverSnapFanCardsService {
                         'snapfan_data' => [
                             'current' => $snapFanDataObject,
                             'history' => $snapFanDataObject,
+                        ],
+                        'internal_data' => [
+                            'downloads' => [], // BTTODO - Construct an array of background images, etc. that I'll need to download eventually
+                            // internal_data->downloads consists of...
+                            // imageUrl
+                            // imageComponents->backgroundUrls -- string[]
+                            // imageComponents->foregroundUrls -- string[]
+                            // imageComponents->foregroundUrl -- string
+                            // imageComponents->logoUrl -- string
                         ],
                     ],
                 );

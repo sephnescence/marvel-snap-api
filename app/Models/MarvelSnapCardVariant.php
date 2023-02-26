@@ -13,6 +13,7 @@ use Ramsey\Uuid\Uuid;
  * @property Carbon $lifespan_start
  * @property Carbon $lifespan_end
  * @property array $snapfan_data
+ * @property array $internal_data
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
@@ -26,8 +27,10 @@ class MarvelSnapCardVariant extends Model
             'lifespan_end' => 'date',
             'lifespan_start' => 'date',
             'snapfan_data' => 'array',
+            'internal_data' => 'array',
         ];
         $this->fillable = [
+            'internal_data',
             'lifespan_end',
             'lifespan_start',
             'marvel_snap_card_id',

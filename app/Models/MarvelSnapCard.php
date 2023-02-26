@@ -26,10 +26,8 @@ class MarvelSnapCard extends Model
             'lifespan_end' => 'date',
             'lifespan_start' => 'date',
             'snapfan_data' => 'array',
-            'internal_data' => 'array',
         ];
         $this->fillable = [
-            'internal_data', // BTTODO - Move to a new table
             'lifespan_end',
             'lifespan_start',
             'name',

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CardController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,4 +25,6 @@ Route::get('/test', [TestController::class, 'test']);
 // Testing a json response
 Route::get('/testJson', [TestController::class, 'testJson']);
 
-Route::get('/card/{cardName}', [CardController::class, 'show']);
+Route::controller(CardController::class)->group(function () {
+    Route::get('/card/{cardName}', 'show');
+});
