@@ -13,7 +13,7 @@ use Ramsey\Uuid\Uuid;
 class DiscoverSnapFanCardsService {
     public function __construct(
         private Logger $log,
-        private SnapFanService $snapFanService//,
+        private SnapFanService $snapFanService
     ) {
     }
 

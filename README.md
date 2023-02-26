@@ -35,6 +35,31 @@ docker run --rm \
 <br />
 <hr />
 
+It's time to do some tests! I'm getting sick of manually have to test stuff lol. I guess I got too caught up in doing the thing, but in the end it's actually slower to move because things break and I have to fix them in addition to making sure the new stuff works too. This is literally what testing is for :D
+
+Apparently Laravel 10 does both phpunit and pest tests, so that's nice. Though it also does phpunit in parallel out of the box. Neat!
+
+`php artisan test --coverage` is handy by itself, but `php artisan test --coverage --min=80.3` can possibly be done as part of a pipeline if I care to. Probably not. I ran this without a min flag and there are actually files as part of Laravel itself that come back not tested at all. So I could probably look at removing them entirely later, but I'm not sure if I'll need them is all. I wonder if there's an ignore list as well 🤷
+
+`php artisan test --profile` is handy to see what the slowest tests are. At the time of writing this, `ExampleTest` is the slowest one at 0.22s. The dream. I wish the could all be that fast haha
+
+Full docs can be found here - https://laravel.com/docs/10.x/testing
+
+When it comes to testing, it sounds like it's best to run `php artisan test --parallel --recreate-databases` as the testing database will not persist. This seems like the safest thing to do. That said, the parallel nature of it means I'm stuck with phpunit by the sounds of it and not pest. Not too sure on that though
+
+You can tell the test suite how many processes you want with `php artisan test --parallel --processes=4` for example
+
+I don't think I'll ever care to run unit tests outside of testing specific php things, so it's possible to skip them entirely with `php artisan test --testsuite=Feature`
+
+You may create pest tests with an example like this. At the time of writing though, I'm not sure how to run pest tests. Even using the commands they suggested, I get `Call to undefined function test()`
+```
+php artisan make:test UserTest --pest
+php artisan make:test UserTest --unit --pest
+```
+
+<br />
+<hr />
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

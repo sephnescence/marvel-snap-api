@@ -23,3 +23,5 @@ Route::get('/test', [TestController::class, 'test']);
 
 // Testing a json response
 Route::get('/testJson', [TestController::class, 'testJson']);
+
+Route::get('/card/{cardName}', [CardController::class, 'show']);
