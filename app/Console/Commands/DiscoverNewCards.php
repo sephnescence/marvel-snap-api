@@ -8,7 +8,8 @@ use Illuminate\Console\Command;
 class DiscoverNewCards extends Command
 {
     /** @var string $signature */
-    protected $signature = 'marvel_snap:discover_new_cards';
+    protected $signature = 'marvel_snap:discover_new_cards
+                            {--date= : Specify a cache date to use}';
     /** @var string $description */
     protected $description = 'Discover new cards';
 
@@ -21,6 +22,9 @@ class DiscoverNewCards extends Command
     public function handle(): void
     {
         // BTTODO - Really need to be adding tests to this
-        $this->discoverSnapFanCardsService->discoverNewCards();
+        $this
+            ->discoverSnapFanCardsService
+            ->setCacheDate($this->option('date'))
+            ->discoverNewCards();
     }
 }

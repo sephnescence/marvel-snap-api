@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property Uuid $id
@@ -49,6 +50,7 @@ class MarvelSnapCard extends Model
     public function getCurrentCardCardSeriesAttribute(): ?MarvelSnapCardCardSeries
     {
         return MarvelSnapCardCardSeries::where('marvel_snap_card_id', '=', $this->attributes['id'])
+            ->where('lifespan_end', '>=', DB::raw('current_timestamp'))
             ->orderBy('lifespan_start', 'asc')
             ->first();
     }

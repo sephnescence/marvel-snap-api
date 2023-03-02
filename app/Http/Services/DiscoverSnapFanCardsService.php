@@ -11,15 +11,27 @@ use Illuminate\Log\Logger;
 use Ramsey\Uuid\Uuid;
 
 class DiscoverSnapFanCardsService {
+    private ?string $cacheDate = null;
+    
     public function __construct(
         private Logger $log,
         private SnapFanService $snapFanService
     ) {
     }
 
+    public function setCacheDate(?string $cacheDate): self
+    {
+        $this->cacheDate = $cacheDate;
+
+        return $this;
+    }
+
     public function discoverNewCards(): bool
     {
-        $snapFanCards = $this->snapFanService->discoverCards();
+        $snapFanCards = $this
+            ->snapFanService
+            ->setCacheDate($this->cacheDate)
+            ->discoverCards();
 
         if (empty($snapFanCards)) {
             return false;
@@ -36,6 +48,13 @@ class DiscoverSnapFanCardsService {
             ksort($snapFanCard);
 
             /**
+             * There's a bug with discovering season changes. For example, every time I run ./vendor/bin/sail artisan marvel_snap:discover_new_cards
+             *  Fix an issue where multiple new season entries get added for AgentCoulson for example. There are a few this applies to - done
+             *  It was related to not checking the the lifespan was current
+             * 
+             * The snapfan watermarks were removed, which should prompt redownloading - BTTODO
+             *  - The history index isn't being added correctly. e.g. It's adding a new record to the current date, instead of adding a new date - BTTODO
+             * 
              * If the card doesn't exist at all, this is pretty simple
              *  - Find or create the marvel_snap_card_series row that the card belongs to - done
              *  - Create the marvel_snap_cards row - done
