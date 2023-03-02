@@ -7,9 +7,9 @@ use Exception;
 use Illuminate\Log\Logger;
 
 class SnapFanService {
-    // https://snap.fan/api/cards/?page=1
-    // http://localhost/api/snap_fan_cards?page=1
     private string $baseUrl = 'http://localhost/api/snap_fan_cards';
+    // It would seem that I have problems with cookies when calling this url for real
+    // private string $baseUrl = 'https://snap.fan/api/cards/';
 
     private array $snapFanCards = [];
 

@@ -52,21 +52,38 @@ class DiscoverSnapFanCardsService {
              * Over time, seasons will also become defunct as their season pass cards move to series 5 - BTTODO
              * 
              * Once variants have been found, we need to queue the background images, foreground images, etc. in
-             *  the `internal_data->'downloads'` column
+             *  the `internal_data->'downloads'` column - done
              * 
-             * Need to make a scheduled task that will try to go and download these images - BTTODO
+             * Need to make a service that will try to go and download these images - done
              * 
              * It's worth copying the html from the marvel-snap-helper repo and making blade versions as well,
-             *  just so they can easily be dumped here to see if they're working with variants, borders, etc. - BTTODO
+             *  just so they can easily be dumped here to see if they're working with variants, borders, etc. - done
+             *  - Still need to apply the mask though - BTTODO
+             * 
+             * Try and figure out how to find unreleased cards
+             *  Should possibly just make that its own season that won't auto delete - BTTODO
              * 
              * Try and figure out how to add card border colours - BTTODO
              * 
-             * Try and figure out how to add card effects. There are more than are listed on snap fan, including - BTTODO
+             * Try and figure out how to generate links to vite assets instead of relying on hard coded domains - BTTODO
+             * 
+             * Try and figure out how to add reveal effects and finishes. There are more than are listed on snap fan, including - BTTODO
              *  - White tone flare (e.g. my black widow) (adds white dots in the background and a couple of white swirls)
              *  - Green tone flare (e.g. my black widow) (adds green dots in the background and a couple of green swirls)
-             *  - Red tone flare
-             *  - Prism Finish
+             *  - Rainbow tone flare (RockSlide Winter Variant)
+             *  - Red tone flare (AgathaHarkness, Mystique)
+             *  - Gold tone flare (Wasp)
+             *  - Black tone flare (AgathaHarkness)
+             *  - Blue tone flare (Enchantress, AmericaChavez)
+             *  - Prism Finish (A bunch of seemingly random shapes shimmer around)
              *  - Foil Finish (It looks like rainbow tin foil has been crumpled up and applied)
+             *  - White Glimmer Flare (AmericaChavez)
+             *  - Black Glimmer Flare (ShangChi)
+             *  - Green Glimmer Flare (ShangChi)
+             *  - Red Glimmer Flare (AmericaChavez)
+             *  - Rainbow Glimmer Flare (WhiteTiger Savage Land)
+             *  - Gold Glimmer Flare (Zabu, BlueMarvel)
+             *  - Misc - Elektra has purple rain in her base variant
              */
             $cardName = $snapFanCard['key'];
             $series = $snapFanCard['sourceLabel'];

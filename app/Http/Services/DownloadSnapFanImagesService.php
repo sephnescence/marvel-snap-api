@@ -35,6 +35,9 @@ class DownloadSnapFanImagesService {
      * - Antman 8 
      * - Bishop 3
      * - Cyclops 7? Has no background at all. Probably not the end of the world, but weird. Snap fan has references to them but they don't work
+     * - ShangChi variant 5 doesn't have a proper card art image
+     * - There's a Polaris with an arm floating off to the side
+     * - Baby She-Hulk is busted
      */
     public function downloadNewImages(): void
     {

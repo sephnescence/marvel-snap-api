@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CardController;
+use App\Http\Controllers\CardsController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,4 +28,8 @@ Route::get('/testJson', [TestController::class, 'testJson']);
 
 Route::controller(CardController::class)->group(function () {
     Route::get('/card/{cardName}', 'show');
+});
+
+Route::controller(CardsController::class)->group(function () {
+    Route::get('/cards/all', 'all');
 });

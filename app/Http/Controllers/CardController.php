@@ -6,7 +6,8 @@ use App\Models\MarvelSnapCard;
 
 class CardController extends Controller
 {
-    public function show(string $cardName) {
+    public function show(string $cardName)
+    {
         // For some reason, I can't seem to get `with` and `load` calls to work
 
         // For example

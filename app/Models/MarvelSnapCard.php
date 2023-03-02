@@ -58,6 +58,9 @@ class MarvelSnapCard extends Model
             MarvelSnapCardVariant::class,
             'marvel_snap_card_id',
             'id'
-        );
+        )->orderBy('name');
     }
+
+    // BTTODO - The series relationship might be solved through has many through
+    // https://laravel.com/docs/10.x/eloquent-relationships#has-many-through-key-conventions
 }
