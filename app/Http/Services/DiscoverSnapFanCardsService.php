@@ -50,6 +50,7 @@ class DiscoverSnapFanCardsService {
              * - We can detect that cost or power, etc. has been updated too
              * 
              * Over time, seasons will also become defunct as their season pass cards move to series 5 - BTTODO
+             *  - Since there's an issue with the cookies when fetching from the api, I might need to manually create the files
              * 
              * Once variants have been found, we need to queue the background images, foreground images, etc. in
              *  the `internal_data->'downloads'` column - done
@@ -59,12 +60,11 @@ class DiscoverSnapFanCardsService {
              * It's worth copying the html from the marvel-snap-helper repo and making blade versions as well,
              *  just so they can easily be dumped here to see if they're working with variants, borders, etc. - done
              * 
-             * Try and figure out how to find unreleased cards
-             *  Should possibly just make that its own season that won't auto delete - BTTODO
+             * Don't attempt to load images if they're blacklisted in DownloadSnapFanImagesService - done
              * 
              * Try and figure out how to add card border colours - BTTODO
              * 
-             * Try and figure out how to generate links to vite assets instead of relying on hard coded domains - BTTODO
+             * Figure out how to generate links to vite assets instead of relying on hard coded domains - done
              * 
              * Try and figure out how to add reveal effects and finishes. There are more than are listed on snap fan, including - BTTODO
              *  - White tone flare (e.g. my black widow) (adds white dots in the background and a couple of white swirls)

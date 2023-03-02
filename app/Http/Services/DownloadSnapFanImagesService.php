@@ -113,4 +113,9 @@ class DownloadSnapFanImagesService {
             $variant->save();
         }
     }
+
+    public function getBlacklistedUrls(): array
+    {
+        return $this->blacklistedUrls;
+    }
 }

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
+ * @property MarvelSnapCardVariant[] $variants
  * @property ?MarvelSnapCardSeries $currentCardSeries
  * @property ?MarvelSnapCardCardSeries $currentCardCardSeries
  */

@@ -22,8 +22,8 @@ div.generated-card
     background-repeat: no-repeat;
     background-size: 201px 201px;
     background-position: center center;
-    mask-image: url('http://localhost:5173/resources/images/cardmask.webp');
-    -webkit-mask-image: url('http://localhost:5173/resources/images/cardmask.webp');
+    mask-image: url('/resources/images/cardmask.webp');
+    -webkit-mask-image: url('/resources/images/cardmask.webp');
     mask-size: 148px 201px;
     -webkit-mask-size: 148px 201px;
     mask-repeat: no-repeat;
