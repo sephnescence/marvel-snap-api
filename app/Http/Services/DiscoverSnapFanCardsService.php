@@ -58,7 +58,6 @@ class DiscoverSnapFanCardsService {
              * 
              * It's worth copying the html from the marvel-snap-helper repo and making blade versions as well,
              *  just so they can easily be dumped here to see if they're working with variants, borders, etc. - done
-             *  - Still need to apply the mask though - BTTODO
              * 
              * Try and figure out how to find unreleased cards
              *  Should possibly just make that its own season that won't auto delete - BTTODO
