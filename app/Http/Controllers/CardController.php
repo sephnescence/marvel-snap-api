@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Services\DownloadSnapFanImagesService;
 use App\Models\MarvelSnapCard;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CardController extends Controller
 {
@@ -21,6 +22,10 @@ class CardController extends Controller
 
         /** @var MarvelSnapCard $card */
         $card = MarvelSnapCard::query()->where('name', '=', $cardName)->first();
+
+        if ($card === null) {
+            throw new ModelNotFoundException();
+        }
 
         // Another example
         // $card->load(['variants']);

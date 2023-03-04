@@ -7,11 +7,14 @@ use App\Models\MarvelSnapCardCardSeries;
 use App\Models\MarvelSnapCardSeries;
 use App\Models\MarvelSnapCardVariant;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Log\Logger;
 use Ramsey\Uuid\Uuid;
 
 class DiscoverSnapFanCardsService {
     private ?string $cacheDate = null;
+
+    private array $blacklistedUrls = [];
     
     public function __construct(
         private Logger $log,
@@ -227,10 +230,6 @@ class DiscoverSnapFanCardsService {
 
     private function syncCardVariants(MarvelSnapCard $marvelSnapCard, array $snapFanCard): void
     {
-        // Assuming that it's not possible to find existing variants for now
-        // Probably don't need to care actually. They will surely only be added and never change, but
-        //  maybe artist details will be updated though
-
         if (array_key_exists('variants', $snapFanCard) && is_array($snapFanCard['variants'])) {
             foreach ($snapFanCard['variants'] as $variant) {
                 ksort($variant);
@@ -253,16 +252,12 @@ class DiscoverSnapFanCardsService {
                         'lifespan_end' => Carbon::maxValue(),
                         'snapfan_data' => [
                             'current' => $snapFanDataObject,
-                            'history' => $snapFanDataObject,
+                            'history' => [
+                                $snapFanDataObject
+                            ],
                         ],
                         'internal_data' => [
-                            'downloads' => [], // BTTODO - Construct an array of background images, etc. that I'll need to download eventually
-                            // internal_data->downloads consists of...
-                            // imageUrl
-                            // imageComponents->backgroundUrls -- string[]
-                            // imageComponents->foregroundUrls -- string[]
-                            // imageComponents->foregroundUrl -- string
-                            // imageComponents->logoUrl -- string
+                            'downloads' => $this->getVariantInternalData($snapFanDataObject['data']),
                         ],
                     ],
                 );
@@ -288,11 +283,102 @@ class DiscoverSnapFanCardsService {
                 if ($variantDataHasChanged !== 0) {
                     $variantSnapFanData['history'][] = $snapFanDataObject;
                     $variantSnapFanData['current'] = $snapFanDataObject;
+                    $cardSnapFanData['internal_data']['downloads'] = $this->getVariantInternalData($snapFanDataObject['data']);
                     $marvelSnapCard->snapfan_data = $variantSnapFanData;
                     $marvelSnapCard->save();
                     $marvelSnapCard->fresh();
                 }
             }
         }
+    }
+
+    private function getVariantInternalData(array $variantData): array
+    {
+        $internalData = [
+            'backgrounds' => [],
+            'foregrounds' => [],
+        ];
+
+        $variantName = $variantData['key'];
+
+        $variantImageDir = dirname(__FILE__)."/../../../resources/images/variants/{$variantName}";
+        if (!is_dir($variantImageDir)) {
+            mkdir($variantImageDir);
+        }
+
+        $historyDate = $this->cacheDate ?? date('Y-m-d');
+        $datedHistoryDir = $variantImageDir . '/' . $historyDate;
+        if (!is_dir($datedHistoryDir)) {
+            mkdir($datedHistoryDir);
+        }
+
+        $this->downloadImage($variantData['imageUrl'], $variantImageDir . '/SnapFanCard.webp');
+        $this->downloadImage($variantData['imageUrl'], $datedHistoryDir . '/SnapFanCard.webp');
+
+        $this->downloadImage($variantData['imageComponents']['logoUrl'], $variantImageDir . '/Logo.webp');
+        $this->downloadImage($variantData['imageComponents']['logoUrl'], $datedHistoryDir . '/Logo.webp');
+
+        $backgroundNumber = 1;
+        foreach ($variantData['imageComponents']['backgroundUrls'] as $index => $backgroundUrl) {
+            if (in_array($backgroundUrl, $this->blacklistedUrls)) {
+                continue;
+            }
+
+            $downloadName = 'Background' . $backgroundNumber . '.webp';
+            $downloadLocation = $variantImageDir . '/' . $downloadName;
+            if ($this->didDownloadImage($backgroundUrl, $downloadLocation)) {
+                $internalData['backgrounds'][] = $downloadName;
+                $this->downloadImage($backgroundUrl, $datedHistoryDir . '/' . $downloadName);
+                $backgroundNumber++;
+            }
+        }
+
+        $foregroundNumber = 1;
+        foreach ($variantData['imageComponents']['foregroundUrls'] as $index => $foregroundUrl) {
+            if (in_array($foregroundUrl, $this->blacklistedUrls)) {
+                continue;
+            }
+
+            $downloadName = 'Foreground' . $foregroundNumber . '.webp';
+            $downloadLocation = $variantImageDir . '/' . $downloadName;
+            if ($this->didDownloadImage($foregroundUrl, $downloadLocation)) {
+                $internalData['foregrounds'][] = $downloadName;
+                $this->downloadImage($foregroundUrl, $datedHistoryDir . '/' . $downloadName);
+                $foregroundNumber++;
+            }
+        }
+
+        return $internalData;
+    }
+
+    private function downloadImage(string $downloadUrl, string $downloadLocation): bool
+    {
+        return $this->didDownloadImage($downloadUrl, $downloadLocation);
+    }
+
+    private function didDownloadImage(string $downloadUrl, string $downloadLocation): bool
+    {
+        try {
+            $downloadData = file_get_contents($downloadUrl);
+        } catch (Exception $e) {
+            $this->log->error(
+                'Failed to download an image',
+                [
+                    'downloadUrl' => $downloadUrl,
+                    'error' => $e->getMessage(),
+                    'file' => __FILE__,
+                    'line' => __LINE__,
+                ]
+            );
+
+            return false;
+        }
+        
+
+        $variantDownloadHandle = fopen($downloadLocation, 'w');
+        fwrite($variantDownloadHandle, $downloadData);
+        fclose($variantDownloadHandle);
+
+        return true;
     }
 }

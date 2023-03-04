@@ -1,7 +1,3 @@
-@php
-    /** @var App\Models\MarvelSnapVariant $variant */
-@endphp
-
 <div class="generated-card">
     <div class="generated-card-inner">
         <div
@@ -35,9 +31,9 @@
         >
             <div
                 class="generated-card-logo"
-                @if (!empty($variant->internal_data['downloads']['Logo.webp']))
-                    style="background-image: url({{ Vite::asset('resources/images/variants/' . $variant->name . '/Logo.webp') }});"
-                @endif
+                @php
+                    echo 'style="background-image: url(' . Vite::asset('resources/images/variants/' . $variant->name . '/Logo.webp') . ');"'
+                @endphp
             >
             </div>
         </div>

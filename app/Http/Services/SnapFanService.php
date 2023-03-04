@@ -362,6 +362,15 @@ class SnapFanService {
     private function getDate(): string
     {
         if ($this->cacheDate !== null) {
+            if ($this->cacheDate > date('Y-m-d')) {
+                dd('Date must be in the past to use a cache');
+            }
+
+            $pageFolder = dirname(__FILE__) . "/../../../snapfancache/{$this->cacheDate}";
+            if (!is_dir($pageFolder)) {
+                dd('No cached data for this date');
+            }
+
             $this->isProd = false;
             return $this->cacheDate;
         }
