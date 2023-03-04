@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Services\DownloadSnapFanImagesService;
 use App\Models\MarvelSnapCard;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CardController extends Controller
 {
-    public function show(
-        string $cardName,
-        DownloadSnapFanImagesService $downloadSnapFanImagesService
-    ) {
+    public function show(string $cardName)
+    {
         // For some reason, I can't seem to get `with` and `load` calls to work - BTTODO
 
         // For example
@@ -30,11 +27,8 @@ class CardController extends Controller
         // Another example
         // $card->load(['variants']);
 
-        $blacklistedUrls = $downloadSnapFanImagesService->getBlacklistedUrls();
-
         return view('cards.single', [
             'card' => $card,
-            'blacklistedUrls' => $blacklistedUrls,
         ]);
     }
 }

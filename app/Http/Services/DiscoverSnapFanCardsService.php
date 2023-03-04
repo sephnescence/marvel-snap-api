@@ -13,8 +13,6 @@ use Ramsey\Uuid\Uuid;
 
 class DiscoverSnapFanCardsService {
     private ?string $cacheDate = null;
-
-    private array $blacklistedUrls = [];
     
     public function __construct(
         private Logger $log,
@@ -320,10 +318,6 @@ class DiscoverSnapFanCardsService {
 
         $backgroundNumber = 1;
         foreach ($variantData['imageComponents']['backgroundUrls'] as $index => $backgroundUrl) {
-            if (in_array($backgroundUrl, $this->blacklistedUrls)) {
-                continue;
-            }
-
             $downloadName = 'Background' . $backgroundNumber . '.webp';
             $downloadLocation = $variantImageDir . '/' . $downloadName;
             if ($this->didDownloadImage($backgroundUrl, $downloadLocation)) {
@@ -335,10 +329,6 @@ class DiscoverSnapFanCardsService {
 
         $foregroundNumber = 1;
         foreach ($variantData['imageComponents']['foregroundUrls'] as $index => $foregroundUrl) {
-            if (in_array($foregroundUrl, $this->blacklistedUrls)) {
-                continue;
-            }
-
             $downloadName = 'Foreground' . $foregroundNumber . '.webp';
             $downloadLocation = $variantImageDir . '/' . $downloadName;
             if ($this->didDownloadImage($foregroundUrl, $downloadLocation)) {
