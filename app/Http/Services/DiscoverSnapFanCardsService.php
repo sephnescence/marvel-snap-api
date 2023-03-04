@@ -49,42 +49,15 @@ class DiscoverSnapFanCardsService {
             ksort($snapFanCard);
 
             /**
-             * There's a bug with discovering season changes. For example, every time I run ./vendor/bin/sail artisan marvel_snap:discover_new_cards
-             *  Fix an issue where multiple new season entries get added for AgentCoulson for example. There are a few this applies to - done
-             *  It was related to not checking the the lifespan was current
-             * 
-             * The snapfan watermarks were removed, which should prompt redownloading - BTTODO
-             *  - The history index isn't being added correctly. e.g. It's adding a new record to the current date, instead of adding a new date - BTTODO
-             * 
-             * If the card doesn't exist at all, this is pretty simple
-             *  - Find or create the marvel_snap_card_series row that the card belongs to - done
-             *  - Create the marvel_snap_cards row - done
-             *  - Create the marvel_snap_card_card_series row - done
-             * 
-             * Over time, cards will change data, like series, cost, or power
-             * - We must detect if the series has changed. If so - done
-             *  - We need to end the lifespan of the current marvel_snap_card_card_series entry - done
-             *  - We need to make a new marvel_snap_card_card_series entry - done
-             * 
-             * - We must detect if new variants have been added
-             * - We can detect that cost or power, etc. has been updated too
-             * 
-             * Over time, seasons will also become defunct as their season pass cards move to series 5 - BTTODO
-             *  - Since there's an issue with the cookies when fetching from the api, I might need to manually create the files
-             * 
-             * Once variants have been found, we need to queue the background images, foreground images, etc. in
-             *  the `internal_data->'downloads'` column - done
-             * 
-             * Need to make a service that will try to go and download these images - done
-             * 
-             * It's worth copying the html from the marvel-snap-helper repo and making blade versions as well,
-             *  just so they can easily be dumped here to see if they're working with variants, borders, etc. - done
-             * 
-             * Don't attempt to load images if they're blacklisted in DownloadSnapFanImagesService - done
+             * Not sure if bug or not, but it seems that snapfan changes the url for imageUrl frequently, but I don't think it has
+             *  actually changed. It did legitimately once though, when they randomly removed all their watermarks. I thought the
+             *  change that was picked up again was just them adding in the watermark back, but it wasn't the case
+             *      This causes the code to download _all_ the files for that variant. It might be worth adding a list
+             *          of urls that have already been downloaded, instead, or just don't download imageUrl ever again
+             *      I like the concept of not downloading it again
+             *      It's possible that cards having their text, season, or power changed will also cause this
              * 
              * Try and figure out how to add card border colours - BTTODO
-             * 
-             * Figure out how to generate links to vite assets instead of relying on hard coded domains - done
              * 
              * Try and figure out how to add reveal effects and finishes. There are more than are listed on snap fan, including - BTTODO
              *  - White tone flare (e.g. my black widow) (adds white dots in the background and a couple of white swirls)
@@ -132,7 +105,7 @@ class DiscoverSnapFanCardsService {
             ],
             [
                 'name' => $series,
-                'lifespan_start' => Carbon::now(),
+                'lifespan_start' => $this->getLifespanStart(),
                 'lifespan_end' => Carbon::maxValue(),
             ],
         );
@@ -147,7 +120,7 @@ class DiscoverSnapFanCardsService {
     private function findOrCreateMarvelSnapCard(string $cardName, array $snapFanCard): MarvelSnapCard
     {
         $snapFanDataObject = [
-            'date' => Carbon::now()->toString(),
+            'date' => $this->getLifespanStart(),
             'data' => $snapFanCard,
         ];
 
@@ -158,7 +131,7 @@ class DiscoverSnapFanCardsService {
             ],
             [
                 'name' => $cardName,
-                'lifespan_start' => Carbon::now(),
+                'lifespan_start' => $this->getLifespanStart(),
                 'lifespan_end' => Carbon::maxValue(),
                 'snapfan_data' => [
                     'current' => $snapFanDataObject,
@@ -207,7 +180,7 @@ class DiscoverSnapFanCardsService {
             ($marvelSnapCardCardSeries instanceof MarvelSnapCardCardSeries)
             && $marvelSnapCardCardSeries->marvel_snap_card_series_id !== $snapFanCardSeries->id
         ) {
-            $marvelSnapCardCardSeries->lifespan_end = Carbon::now();
+            $marvelSnapCardCardSeries->lifespan_end = $this->getLifespanStart();
             $marvelSnapCardCardSeries->save();
 
             $createNewCardCardSeriesRecord = true;
@@ -218,10 +191,10 @@ class DiscoverSnapFanCardsService {
             $marvelSnapCardCardSeries->id = Uuid::uuid4()->toString();
             $marvelSnapCardCardSeries->marvel_snap_card_series_id = $snapFanCardSeries->id;
             $marvelSnapCardCardSeries->marvel_snap_card_id = $marvelSnapCard->id;
-            $marvelSnapCardCardSeries->lifespan_start = Carbon::now();
+            $marvelSnapCardCardSeries->lifespan_start = $this->getLifespanStart();
             $marvelSnapCardCardSeries->lifespan_end = Carbon::maxValue();
-            $marvelSnapCardCardSeries->created_at = Carbon::now();
-            $marvelSnapCardCardSeries->updated_at = Carbon::now();
+            $marvelSnapCardCardSeries->created_at = $this->getLifespanStart();
+            $marvelSnapCardCardSeries->updated_at = $this->getLifespanStart();
             $marvelSnapCardCardSeries->save();
         }
     }
@@ -233,7 +206,7 @@ class DiscoverSnapFanCardsService {
                 ksort($variant);
                 
                 $snapFanDataObject = [
-                    'date' => Carbon::now()->toString(),
+                    'date' => $this->getLifespanStart(),
                     'data' => $variant,
                 ];
 
@@ -246,7 +219,7 @@ class DiscoverSnapFanCardsService {
                     [
                         'name' => $variant['key'],
                         'marvel_snap_card_id' => $marvelSnapCard->id,
-                        'lifespan_start' => Carbon::now(),
+                        'lifespan_start' => $this->getLifespanStart(),
                         'lifespan_end' => Carbon::maxValue(),
                         'snapfan_data' => [
                             'current' => $snapFanDataObject,
@@ -278,6 +251,61 @@ class DiscoverSnapFanCardsService {
                     json_encode($variant)
                 );
 
+                // dd('bleh', [
+                //     'id' => $variantModel->id,
+                //     'changed?' => $variantDataHasChanged,
+                //     // 'current' => array_keys($currentSnapFanData),
+                //     // 'variant' => array_keys($variant),
+                //     'artVariantSourceDefKey' => [
+                //         $currentSnapFanData['artVariantSourceDefKey'],
+                //         $variant['artVariantSourceDefKey'],
+                //     ],
+                //     'artists' => [
+                //         $currentSnapFanData['artists'],
+                //         $variant['artists'],
+                //     ],
+                //     'cardDefKey' => [
+                //         $currentSnapFanData['cardDefKey'],
+                //         $variant['cardDefKey'],
+                //     ],
+                //     'cost' => [
+                //         $currentSnapFanData['cost'],
+                //         $variant['cost'],
+                //     ],
+                //     'imageComponents' => [
+                //         $currentSnapFanData['imageComponents'],
+                //         $variant['imageComponents'],
+                //     ],
+                //     'imageUrl' => [
+                //         $currentSnapFanData['imageUrl'],
+                //         $variant['imageUrl'],
+                //     ],
+                //     'isCardDefDisplayVariant' => [
+                //         $currentSnapFanData['isCardDefDisplayVariant'],
+                //         $variant['isCardDefDisplayVariant'],
+                //     ],
+                //     'key' => [
+                //         $currentSnapFanData['key'],
+                //         $variant['key'],
+                //     ],
+                //     'power' => [
+                //         $currentSnapFanData['power'],
+                //         $variant['power'],
+                //     ],
+                //     'sourceLabel' => [
+                //         $currentSnapFanData['sourceLabel'],
+                //         $variant['sourceLabel'],
+                //     ],
+                //     'url' => [
+                //         $currentSnapFanData['url'],
+                //         $variant['url'],
+                //     ],
+                //     'variantLabel' => [
+                //         $currentSnapFanData['variantLabel'],
+                //         $variant['variantLabel'],
+                //     ],
+                // ]);
+
                 if ($variantDataHasChanged !== 0) {
                     $variantSnapFanData['history'][] = $snapFanDataObject;
                     $variantSnapFanData['current'] = $snapFanDataObject;
@@ -288,6 +316,11 @@ class DiscoverSnapFanCardsService {
                 }
             }
         }
+    }
+
+    private function getLifespanStart(): string
+    {
+        return ($this->cacheDate ?? date('Y-m-d')) . ' 00:00+00';
     }
 
     private function getVariantInternalData(array $variantData): array
@@ -310,16 +343,28 @@ class DiscoverSnapFanCardsService {
             mkdir($datedHistoryDir);
         }
 
-        $this->downloadImage($variantData['imageUrl'], $variantImageDir . '/SnapFanCard.webp');
-        $this->downloadImage($variantData['imageUrl'], $datedHistoryDir . '/SnapFanCard.webp');
+        if (!$this->historicalImageAlreadyExists($datedHistoryDir . '/SnapFanCard.webp')) {
+            $this->downloadImage($variantData['imageUrl'], $variantImageDir . '/SnapFanCard.webp');
+            $this->downloadImage($variantData['imageUrl'], $datedHistoryDir . '/SnapFanCard.webp');
+        }
 
-        $this->downloadImage($variantData['imageComponents']['logoUrl'], $variantImageDir . '/Logo.webp');
-        $this->downloadImage($variantData['imageComponents']['logoUrl'], $datedHistoryDir . '/Logo.webp');
+        if (!$this->historicalImageAlreadyExists($datedHistoryDir . '/Logo.webp')) {
+            $this->downloadImage($variantData['imageComponents']['logoUrl'], $variantImageDir . '/Logo.webp');
+            $this->downloadImage($variantData['imageComponents']['logoUrl'], $datedHistoryDir . '/Logo.webp');
+        }
 
         $backgroundNumber = 1;
         foreach ($variantData['imageComponents']['backgroundUrls'] as $index => $backgroundUrl) {
             $downloadName = 'Background' . $backgroundNumber . '.webp';
             $downloadLocation = $variantImageDir . '/' . $downloadName;
+
+            if ($this->historicalImageAlreadyExists($datedHistoryDir . '/' . $downloadName)) {
+                $internalData['backgrounds'][] = $downloadName;
+                $backgroundNumber++;
+
+                continue;
+            }
+
             if ($this->didDownloadImage($backgroundUrl, $downloadLocation)) {
                 $internalData['backgrounds'][] = $downloadName;
                 $this->downloadImage($backgroundUrl, $datedHistoryDir . '/' . $downloadName);
@@ -331,6 +376,14 @@ class DiscoverSnapFanCardsService {
         foreach ($variantData['imageComponents']['foregroundUrls'] as $index => $foregroundUrl) {
             $downloadName = 'Foreground' . $foregroundNumber . '.webp';
             $downloadLocation = $variantImageDir . '/' . $downloadName;
+
+            if ($this->historicalImageAlreadyExists($datedHistoryDir . '/' . $downloadName)) {
+                $internalData['foregrounds'][] = $downloadName;
+                $foregroundNumber++;
+
+                continue;
+            }
+
             if ($this->didDownloadImage($foregroundUrl, $downloadLocation)) {
                 $internalData['foregrounds'][] = $downloadName;
                 $this->downloadImage($foregroundUrl, $datedHistoryDir . '/' . $downloadName);
@@ -339,6 +392,11 @@ class DiscoverSnapFanCardsService {
         }
 
         return $internalData;
+    }
+
+    private function historicalImageAlreadyExists(string $downloadLocation): bool
+    {
+        return file_exists(($downloadLocation));
     }
 
     private function downloadImage(string $downloadUrl, string $downloadLocation): bool
