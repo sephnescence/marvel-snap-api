@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * @property Uuid $id
  * @property string $name
+ * @property bool $isWithinLifespan
  * @property Carbon $lifespan_start
  * @property Carbon $lifespan_end
  * @property array $snapfan_data
@@ -66,4 +68,13 @@ class MarvelSnapCard extends Model
 
     // BTTODO - The series relationship might be solved through has many through
     // https://laravel.com/docs/10.x/eloquent-relationships#has-many-through-key-conventions
+
+    public function getIsWithinLifespanAttribute(): bool
+    {
+        return (Carbon::now())
+            ->between(
+                $this->attributes['lifespan_start'],
+                $this->attributes['lifespan_end']
+        );
+    }
 }

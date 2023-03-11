@@ -21,3 +21,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Testing a json response
 Route::get('/snap_fan_cards', [SnapFanCards::class, 'page']);
+
+Route::get('/snap_fan_cards/all', [SnapFanCards::class, 'all']);

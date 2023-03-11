@@ -10,7 +10,8 @@ class SnapFanService {
     private ?string $cacheDate = null;
 
     // Switch to true to use ZenRows
-    private bool $isProd = true;
+    // There's an issue with using ZenRows atm sadly
+    private bool $isProd = false;
 
     private int $attempt = 0;
 
@@ -232,7 +233,6 @@ class SnapFanService {
                 'Failed to determine total number of pages',
                 [
                     'attempt' => $this->attempt,
-                    'count' => (string) $count,
                     'file' => __FILE__,
                     'line' => __LINE__,
                 ]
@@ -298,6 +298,16 @@ class SnapFanService {
     private function getCurlHandle(string $pageNumber): CurlHandle
     {
         $url = $this->getBaseUrl() . "?page={$pageNumber}";
+
+        $this->log->info(
+            'Fetching url',
+            [
+                'attempt' => $this->attempt,
+                'url' => $url,
+                'file' => __FILE__,
+                'line' => __LINE__,
+            ]
+        );
 
         $curlHandle = curl_init($url);
 
@@ -377,7 +387,7 @@ class SnapFanService {
         
         return $this->isProd
             ? date('Y-m-d')
-            : '2023-02-24';
+            : '2023-03-11';
     }
 
     private function savePageResponseArray(string $pageNumber, array $results): void
